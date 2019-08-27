@@ -2,25 +2,65 @@
 use strict;
 use warnings;
 use JSON;
-use JSON qw( decode_json );
 use Data::Dumper;
 use String::Util qw(trim);
+use Getopt::Long;
 
 #datefirsrt datesecond
 #ubrat perenos stroki
-my($filename) = @ARGV;
-print("Filename enter = '$filename'");
+
+my $month = '';
+my $year = '';
+my $lang = 'en';
+my $domain = '';
+
+GetOptions (
+    'month=s' => \$month,
+    'year=s' => \$year,
+    'lang=s' => \$lang,
+    'domain=s' => \$domain
+) or die ('Error in arguments');
+
+if ($domain eq '') {
+     die "Domain is required";
+} else {
+    print "domain = $domain\n";
+}
+
+
 #my finalrray[];
 
-if (defined $filename) {
-    my $filels=`/bin/ls -l /var/lib/awstats/ | /bin/grep txt | /usr/bin/awk '{print $9}'`;
-    print "files in directory /var/lib/awstat $filels\n";
+if (defined $lang && defined $year && defined $month && defined $domain) {
+
+    my $curdatefull = `/bin/date +'%Y-%m-%d-%S'`;
+    my $filename_log = "awstats".$month.$year.".txt";
+    my $filename = "/var/lib/awstats/".$domain."/".$filename_log;
+    print "full log = $filename\n";
+    print "cur date full = $curdatefull\n";
+
+    my $resexists = system("ls -l /var/lib/awstats/$domain/ | grep $filename_log | awk '{print \$9}'");
+    print "resexists = $resexists\n";
+    if ( $resexists eq "" ) {
+        print "File ne suhestvuet\n";
+        #system("touch $filename");
+    }
+    if( $resexists ne "" ) {
+         print "File suhestvuet\n";
+    }
+
+    #my $command = "/usr/bin/awstats -update -month=$month -year=$year -lang=$lang -config=/etc/awstats/awstats.$domain > $filename";
+    my $command = "/usr/bin/awstats -update -month=$month -year=$year -lang=$lang -config=/etc/awstats/awstats.$domain > /dev/null";
+    #my $command = "/usr/bin/awstats -config=/etc/awstats/awstats.$domain";
+    print "command = $command\n";
+
+    system("$command");    
     my $json = JSON->new;
     my $myadd;
     my $data_to_json;
     my @fulljson;
     #print "Vi vveli file\n -- VSE OK\n";
     #print "Formiruem seychas JSON Structuru sootvestvenno LOG file '$filename'\n";
+    #system("touch $filename");
     open (FILE, $filename) or die "Could not open $filename: $!";
     #print "filename=$filename\n";
     my $jsonstring;
@@ -57,7 +97,9 @@ if (defined $filename) {
                   $myadd="";   
                }
            }
-       } else {
+       } 
+
+       else {
 	       #print "NE BEGIN NE END\n";
                #print "myadd = $myadd\n";
                my $frombegin = $myadd;
@@ -86,7 +128,83 @@ if (defined $filename) {
    #print Dumper(@fulljson)."\n";
    print encode_json(\@fulljson)."\n";
    close (FILE);
-} else {
-    print "Vi ne vveli file\n";
+} 
+
+#-----------------------------------------------------------------------------------------
+if (defined $lang && defined $domain && !defined $month && !defined $year) {
+      my $curdatefull = `/bin/date +'%Y-%m-%d-%S'`;
+      my $filename_log = "awstats".$month.$year.".txt";
+      my $filename = "/var/lib/awstats/".$domain."/".$filename_log;
+      print "full log = $filename\n";
+      print "cur date full = $curdatefull\n";
+
+      my $resexists = system("ls -l /var/lib/awstats/$domain/ | grep $filename_log | awk '{print \$9}'");
+      print "resexists = $resexists\n";
+      if ( $resexists eq "" ) {
+        print "File ne suhestvuet\n";
+        #system("touch $filename");
+      }
+      if( $resexists ne "" ) {
+         print "File suhestvuet\n";
+      }
+
+      #my $command = "/usr/bin/awstats -update -month=$month -year=$year -lang=$lang -config=/etc/awstats/awstats.$domain > $filename";
+      my $command = "/usr/bin/awstats -update -lang=$lang -config=/etc/awstats/awstats.$domain > /dev/null";
+      #my $command = "/usr/bin/awstats -config=/etc/awstats/awstats.$domain";
+      print "command = $command\n";
+
+      system("$command");
+      my $json = JSON->new;
+      my $myadd;
+      my $data_to_json;
+      my @fulljson;
+      #print "Vi vveli file\n -- VSE OK\n";
+      #print "Formiruem seychas JSON Structuru sootvestvenno LOG file '$filename'\n";
+      #system("touch $filename");
+      open (FILE, $filename) or die "Could not open $filename: $!";
+      #print "filename=$filename\n";
+      my $jsonstring;     
 }
+
+#---------------------------------------------------------------------------------------------------
+if (!defined $lang && defined $domain && !defined $month && !defined $year) {
+      my $curdatefull = `/bin/date +'%Y-%m-%d-%S'`;
+      my $filename_log = "awstats".$month.$year.".txt";
+      my $filename = "/var/lib/awstats/".$domain."/".$filename_log;
+      print "full log = $filename\n";
+      print "cur date full = $curdatefull\n";
+
+      my $resexists = system("ls -l /var/lib/awstats/$domain/ | grep $filename_log | awk '{print \$9}'");
+      print "resexists = $resexists\n";
+      if ( $resexists eq "" ) {
+        print "File ne suhestvuet\n";
+        #system("touch $filename");
+      }
+      if( $resexists ne "" ) {
+         print "File suhestvuet\n";
+      }
+
+      #my $command = "/usr/bin/awstats -update -month=$month -year=$year -lang=$lang -config=/etc/awstats/awstats.$domain > $filename";
+      my $command = "/usr/bin/awstats -update -config=/etc/awstats/awstats.$domain > /dev/null";
+      #my $command = "/usr/bin/awstats -config=/etc/awstats/awstats.$domain";
+      print "command = $command\n";
+
+      system("$command");
+      my $json = JSON->new;
+      my $myadd;
+      my $data_to_json;
+      my @fulljson;
+      #print "Vi vveli file\n -- VSE OK\n";
+      #print "Formiruem seychas JSON Structuru sootvestvenno LOG file '$filename'\n";
+      #system("touch $filename");
+      open (FILE, $filename) or die "Could not open $filename: $!";
+      #print "filename=$filename\n";
+      my $jsonstring;   
+}
+
+#----------------------------------------------------------------------------------------------------------------------
+else {
+    print "Vi ne vveli obyazatelnie parametri\n";
+}
+
 
